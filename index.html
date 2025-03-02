@@ -161,6 +161,28 @@
             cursor: not-allowed;
         }
 
+        .audio-setup-button {
+            margin-bottom: 20px;
+            background-color: #53b3cb;
+            color: white;
+            border: none;
+            border-radius: 5px;
+            padding: 12px 20px;
+            cursor: pointer;
+            font-size: 16px;
+            transition: background-color 0.3s;
+            width: 300px;
+            max-width: 100%;
+        }
+
+        .audio-setup-button:hover {
+            background-color: #3e8a9a;
+        }
+
+        .audio-setup-button.enabled {
+            background-color: #4CAF50;
+        }
+
         .play-pronunciation {
             margin-top: 10px;
             background-color: var(--accent-color);
@@ -177,6 +199,11 @@
 
         .play-pronunciation:hover {
             background-color: #ff5151;
+        }
+
+        .play-pronunciation:disabled {
+            background-color: #ccc;
+            cursor: not-allowed;
         }
 
         .sound-icon {
@@ -220,6 +247,10 @@
             .burmese-translation {
                 font-size: 24px;
             }
+
+            .audio-setup-button {
+                width: 90%;
+            }
         }
     </style>
 </head>
@@ -230,6 +261,8 @@
     </header>
 
     <div class="container">
+        <button id="audio-setup" class="audio-setup-button">🔊 Click here to enable audio</button>
+
         <div class="controls">
             <button class="category-selector active" data-category="colors">Colors</button>
             <button class="category-selector" data-category="months">Months</button>
@@ -241,7 +274,7 @@
                 <div class="card-face card-front">
                     <div class="thai-word"></div>
                     <div class="pronunciation"></div>
-                    <button class="play-pronunciation">
+                    <button class="play-pronunciation" disabled>
                         <span class="sound-icon">🔊</span> Play Thai
                     </button>
                 </div>
@@ -456,9 +489,12 @@
                 ]
             };
 
+            // Application state
             let currentCategory = 'colors';
             let currentCardIndex = 0;
+            let audioEnabled = false;
 
+            // DOM Elements
             const card = document.querySelector('.card');
             const thaiWordElement = document.querySelector('.thai-word');
             const burmeseTranslationElement = document.querySelector('.burmese-translation');
@@ -468,25 +504,109 @@
             const categoryButtons = document.querySelectorAll('.category-selector');
             const cardCounter = document.querySelector('.card-counter');
             const playPronunciationButton = document.querySelector('.play-pronunciation');
+            const audioSetupButton = document.getElementById('audio-setup');
 
-            // Initialize ResponsiveVoice if available
-            const voiceAvailable = typeof responsiveVoice !== 'undefined';
+            // Audio setup for mobile browsers
+            audioSetupButton.addEventListener('click', function() {
+                setupAudio();
+            });
 
-            if (voiceAvailable) {
-                // Initialize with Thai language
-                responsiveVoice.init();
-            } else {
-                console.warn("ResponsiveVoice not available. Using browser's native speech synthesis instead.");
+            function setupAudio() {
+                if (typeof responsiveVoice !== 'undefined') {
+                    try {
+                        // Play a silent sound to initialize
+                        responsiveVoice.speak('', 'UK English Female', {
+                            volume: 0.01,
+                            onstart: function() {
+                                console.log("Audio initialized");
+
+                                // Update button
+                                audioSetupButton.textContent = '🔊 Audio Enabled ✓';
+                                audioSetupButton.classList.add('enabled');
+
+                                // Enable play button
+                                playPronunciationButton.disabled = false;
+
+                                // Mark as enabled
+                                audioEnabled = true;
+
+                                // Store in localStorage for future visits
+                                try {
+                                    localStorage.setItem('audioInitialized', 'true');
+                                } catch (e) {
+                                    console.warn("Could not access localStorage:", e);
+                                }
+                            },
+                            onend: function() {
+                                // Animation to show it's complete
+                                setTimeout(() => {
+                                    audioSetupButton.style.display = 'none';
+                                }, 2000);
+                            },
+                            onerror: function(e) {
+                                console.error("Audio initialization error:", e);
+                                audioSetupButton.textContent = '❌ Could not enable audio. Try again.';
+                                setTimeout(() => {
+                                    audioSetupButton.textContent = '🔊 Click here to enable audio';
+                                }, 3000);
+                            }
+                        });
+                    } catch (e) {
+                        console.error("ResponsiveVoice error:", e);
+                        fallbackAudioSetup();
+                    }
+                } else {
+                    fallbackAudioSetup();
+                }
+            }
+
+            function fallbackAudioSetup() {
+                // Try browser's native speech synthesis
+                if ('speechSynthesis' in window) {
+                    try {
+                        // Create a silent utterance
+                        const utterance = new SpeechSynthesisUtterance('');
+                        speechSynthesis.speak(utterance);
+
+                        // Update UI
+                        audioSetupButton.textContent = '🔊 Audio Enabled (Browser Speech) ✓';
+                        audioSetupButton.classList.add('enabled');
+                        playPronunciationButton.disabled = false;
+                        audioEnabled = true;
+
+                        // Animation to show it's complete
+                        setTimeout(() => {
+                            audioSetupButton.style.display = 'none';
+                        }, 2000);
+                    } catch (e) {
+                        console.error("Speech synthesis error:", e);
+                        audioSetupButton.textContent = '❌ Audio unavailable in this browser';
+                        audioSetupButton.style.backgroundColor = "#f44336";
+                    }
+                } else {
+                    audioSetupButton.textContent = '❌ Speech not supported in this browser';
+                    audioSetupButton.style.backgroundColor = "#f44336";
+                }
+            }
+
+            // Check if audio was previously initialized
+            try {
+                if (localStorage.getItem('audioInitialized') === 'true') {
+                    setupAudio();
+                }
+            } catch (e) {
+                console.warn("Could not access localStorage:", e);
             }
 
             // Initialize the first card
             updateCard();
 
-            // Event listeners
+            // Card flip event
             card.addEventListener('click', function() {
                 this.classList.toggle('flipped');
             });
 
+            // Navigation buttons
             prevButton.addEventListener('click', function() {
                 if (currentCardIndex > 0) {
                     currentCardIndex--;
@@ -501,6 +621,7 @@
                 }
             });
 
+            // Category selection
             categoryButtons.forEach(button => {
                 button.addEventListener('click', function() {
                     currentCategory = this.dataset.category;
@@ -514,12 +635,13 @@
                 });
             });
 
+            // Pronunciation button
             playPronunciationButton.addEventListener('click', function(event) {
                 event.stopPropagation(); // Prevent card from flipping
                 playPronunciation();
             });
 
-            // Functions
+            // Card update function
             function updateCard() {
                 const currentCard = flashcards[currentCategory][currentCardIndex];
 
@@ -538,32 +660,95 @@
                 card.classList.remove('flipped');
             }
 
+            // Pronunciation function
             function playPronunciation() {
+                if (!audioEnabled) {
+                    alert("Please enable audio first by clicking the button at the top");
+                    return;
+                }
+
                 const currentCard = flashcards[currentCategory][currentCardIndex];
 
-                if (voiceAvailable) {
-                    // Use ResponsiveVoice with Thai language
-                    responsiveVoice.speak(currentCard.thai, "Thai Female", {
-                        rate: 0.8,  // Slightly slower rate for better learning
-                        pitch: 1,
-                        onstart: function() {
-                            playPronunciationButton.style.backgroundColor = "#888";
-                            playPronunciationButton.innerHTML = '<span class="sound-icon">🔊</span> Playing...';
-                        },
-                        onend: function() {
+                // Visual feedback first
+                playPronunciationButton.style.backgroundColor = "#888";
+                playPronunciationButton.innerHTML = '<span class="sound-icon">🔊</span> Playing...';
+
+                // Cancel any existing speech
+                if (typeof responsiveVoice !== 'undefined' && responsiveVoice.isPlaying()) {
+                    responsiveVoice.cancel();
+                }
+
+                // Try ResponsiveVoice first
+                if (typeof responsiveVoice !== 'undefined') {
+                    try {
+                        const textToSpeak = currentCard.thai;
+
+                        responsiveVoice.speak(textToSpeak, "Thai Female", {
+                            rate: 0.8,
+                            pitch: 1,
+                            volume: 1.0,
+                            onstart: function() {
+                                console.log("Speech started");
+                            },
+                            onend: function() {
+                                playPronunciationButton.style.backgroundColor = "";
+                                playPronunciationButton.innerHTML = '<span class="sound-icon">🔊</span> Play Thai';
+                                console.log("Speech ended");
+                            },
+                            onerror: function(e) {
+                                console.error("Speech error:", e);
+                                fallbackPronunciation(currentCard);
+                            }
+                        });
+                    } catch (e) {
+                        console.error("ResponsiveVoice error:", e);
+                        fallbackPronunciation(currentCard);
+                    }
+                } else {
+                    fallbackPronunciation(currentCard);
+                }
+            }
+
+            // Fallback pronunciation using browser's speech synthesis
+            function fallbackPronunciation(currentCard) {
+                if ('speechSynthesis' in window) {
+                    try {
+                        const utterance = new SpeechSynthesisUtterance(currentCard.thai);
+                        utterance.lang = 'th-TH';
+                        utterance.volume = 1.0;
+                        utterance.rate = 0.8;
+
+                        utterance.onstart = function() {
+                            console.log("Browser speech started");
+                        };
+
+                        utterance.onend = function() {
                             playPronunciationButton.style.backgroundColor = "";
                             playPronunciationButton.innerHTML = '<span class="sound-icon">🔊</span> Play Thai';
-                        }
-                    });
-                } else {
-                    // Fallback to browser's speech synthesis
-                    if ('speechSynthesis' in window) {
-                        const utterance = new SpeechSynthesisUtterance(currentCard.thai);
-                        utterance.lang = 'th-TH'; // Thai language
+                            console.log("Browser speech ended");
+                        };
+
+                        utterance.onerror = function(e) {
+                            console.error("Browser speech error:", e);
+                            playPronunciationButton.style.backgroundColor = "";
+                            playPronunciationButton.innerHTML = '<span class="sound-icon">❌</span> Audio Failed';
+
+                            setTimeout(() => {
+                                playPronunciationButton.innerHTML = '<span class="sound-icon">🔊</span> Play Thai';
+                            }, 2000);
+                        };
+
                         speechSynthesis.speak(utterance);
-                    } else {
-                        alert("Speech synthesis is not supported in your browser.");
+                    } catch (e) {
+                        console.error("Browser speech synthesis error:", e);
+                        playPronunciationButton.style.backgroundColor = "";
+                        playPronunciationButton.innerHTML = '<span class="sound-icon">🔊</span> Play Thai';
+                        alert("Speech synthesis failed. This may be due to browser restrictions.");
                     }
+                } else {
+                    playPronunciationButton.style.backgroundColor = "";
+                    playPronunciationButton.innerHTML = '<span class="sound-icon">🔊</span> Play Thai';
+                    alert("Speech synthesis is not supported in your browser.");
                 }
             }
 
