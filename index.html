@@ -4,6 +4,8 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Thai-Burmese Flash Cards</title>
+    <!-- ResponsiveVoice API -->
+    <script src="https://code.responsivevoice.org/responsivevoice.js?key=D2EUdI9u"></script>
     <style>
         :root {
             --primary-color: #f9c22e;
@@ -50,10 +52,11 @@
             justify-content: center;
             margin-bottom: 20px;
             width: 100%;
+            flex-wrap: wrap;
         }
 
         .category-selector {
-            margin: 0 10px;
+            margin: 5px;
             padding: 10px 20px;
             background-color: var(--secondary-color);
             color: white;
@@ -164,8 +167,20 @@
             color: white;
             border: none;
             border-radius: 5px;
-            padding: 5px 10px;
+            padding: 8px 15px;
             cursor: pointer;
+            display: flex;
+            align-items: center;
+            gap: 5px;
+            font-size: 16px;
+        }
+
+        .play-pronunciation:hover {
+            background-color: #ff5151;
+        }
+
+        .sound-icon {
+            font-size: 18px;
         }
 
         .card-counter {
@@ -181,6 +196,31 @@
             font-size: 14px;
             color: var(--text-color);
         }
+
+        .attribution {
+            font-size: 12px;
+            margin-top: 5px;
+            color: #888;
+        }
+
+        @media (max-width: 500px) {
+            .card-container {
+                width: 90%;
+                height: 180px;
+            }
+
+            .navigation {
+                width: 90%;
+            }
+
+            .thai-word {
+                font-size: 28px;
+            }
+
+            .burmese-translation {
+                font-size: 24px;
+            }
+        }
     </style>
 </head>
 <body>
@@ -193,6 +233,7 @@
         <div class="controls">
             <button class="category-selector active" data-category="colors">Colors</button>
             <button class="category-selector" data-category="months">Months</button>
+            <button class="category-selector" data-category="basic">Basic Phrases</button>
         </div>
 
         <div class="card-container">
@@ -201,7 +242,7 @@
                     <div class="thai-word"></div>
                     <div class="pronunciation"></div>
                     <button class="play-pronunciation">
-                        <span class="sound-icon">🔊</span> Play
+                        <span class="sound-icon">🔊</span> Play Thai
                     </button>
                 </div>
                 <div class="card-face card-back">
@@ -220,6 +261,7 @@
 
     <footer>
         <p>Created for Thai language practice | <a href="https://github.com/yourusername/thai-burmese-flashcards" target="_blank">GitHub Repository</a></p>
+        <p class="attribution">Voice powered by ResponsiveVoice (Free Non-Commercial License)</p>
     </footer>
 
     <script>
@@ -231,61 +273,61 @@
                         thai: "สีแดง",
                         burmese: "အနီရောင်",
                         pronunciation: "sǐi dɛɛng",
-                        audioUrl: "" // Future addition
+                        meaning: "red"
                     },
                     {
                         thai: "สีฟ้า",
                         burmese: "အပြာရောင်",
                         pronunciation: "sǐi fáa",
-                        audioUrl: ""
+                        meaning: "blue"
                     },
                     {
                         thai: "สีเขียว",
                         burmese: "အစိမ်းရောင်",
                         pronunciation: "sǐi kǐiao",
-                        audioUrl: ""
+                        meaning: "green"
                     },
                     {
                         thai: "สีเหลือง",
                         burmese: "အဝါရောင်",
                         pronunciation: "sǐi lʉ̌ang",
-                        audioUrl: ""
+                        meaning: "yellow"
                     },
                     {
                         thai: "สีดำ",
                         burmese: "အမဲရောင်",
                         pronunciation: "sǐi dam",
-                        audioUrl: ""
+                        meaning: "black"
                     },
                     {
                         thai: "สีขาว",
                         burmese: "အဖြူရောင်",
                         pronunciation: "sǐi kǎao",
-                        audioUrl: ""
+                        meaning: "white"
                     },
                     {
                         thai: "สีส้ม",
                         burmese: "လိမ္မော်ရောင်",
                         pronunciation: "sǐi sôm",
-                        audioUrl: ""
+                        meaning: "orange"
                     },
                     {
                         thai: "สีม่วง",
                         burmese: "ခရမ်းရောင်",
                         pronunciation: "sǐi mûang",
-                        audioUrl: ""
+                        meaning: "purple"
                     },
                     {
                         thai: "สีน้ำตาล",
                         burmese: "အညိုရောင်",
                         pronunciation: "sǐi nám-taan",
-                        audioUrl: ""
+                        meaning: "brown"
                     },
                     {
                         thai: "สีชมพู",
                         burmese: "ပန်းရောင်",
                         pronunciation: "sǐi chom-puu",
-                        audioUrl: ""
+                        meaning: "pink"
                     }
                 ],
                 months: [
@@ -293,73 +335,123 @@
                         thai: "มกราคม",
                         burmese: "ဇန်နဝါရီလ",
                         pronunciation: "mók-gà-raa-khom",
-                        audioUrl: ""
+                        meaning: "January"
                     },
                     {
                         thai: "กุมภาพันธ์",
                         burmese: "ဖေဖော်ဝါရီလ",
                         pronunciation: "gum-phaa-phan",
-                        audioUrl: ""
+                        meaning: "February"
                     },
                     {
                         thai: "มีนาคม",
                         burmese: "မတ်လ",
                         pronunciation: "mii-naa-khom",
-                        audioUrl: ""
+                        meaning: "March"
                     },
                     {
                         thai: "เมษายน",
                         burmese: "ဧပြီလ",
                         pronunciation: "mee-sǎa-yon",
-                        audioUrl: ""
+                        meaning: "April"
                     },
                     {
                         thai: "พฤษภาคม",
                         burmese: "မေလ",
                         pronunciation: "prʉ́t-sà-phaa-khom",
-                        audioUrl: ""
+                        meaning: "May"
                     },
                     {
                         thai: "มิถุนายน",
                         burmese: "ဇွန်လ",
                         pronunciation: "mí-thù-naa-yon",
-                        audioUrl: ""
+                        meaning: "June"
                     },
                     {
                         thai: "กรกฎาคม",
                         burmese: "ဇူလိုင်လ",
                         pronunciation: "gà-rá-gà-daa-khom",
-                        audioUrl: ""
+                        meaning: "July"
                     },
                     {
                         thai: "สิงหาคม",
                         burmese: "သြဂုတ်လ",
                         pronunciation: "sǐng-hǎa-khom",
-                        audioUrl: ""
+                        meaning: "August"
                     },
                     {
                         thai: "กันยายน",
                         burmese: "စက်တင်ဘာလ",
                         pronunciation: "gan-yaa-yon",
-                        audioUrl: ""
+                        meaning: "September"
                     },
                     {
                         thai: "ตุลาคม",
                         burmese: "အောက်တိုဘာလ",
                         pronunciation: "tù-laa-khom",
-                        audioUrl: ""
+                        meaning: "October"
                     },
                     {
                         thai: "พฤศจิกายน",
                         burmese: "နိုဝင်ဘာလ",
                         pronunciation: "prʉ́t-sà-jì-gaa-yon",
-                        audioUrl: ""
+                        meaning: "November"
                     },
                     {
                         thai: "ธันวาคม",
                         burmese: "ဒီဇင်ဘာလ",
                         pronunciation: "than-waa-khom",
-                        audioUrl: ""
+                        meaning: "December"
+                    }
+                ],
+                basic: [
+                    {
+                        thai: "สวัสดี",
+                        burmese: "မင်္ဂလာပါ",
+                        pronunciation: "sà-wàt-dii",
+                        meaning: "hello"
+                    },
+                    {
+                        thai: "ขอบคุณ",
+                        burmese: "ကျေးဇူးတင်ပါတယ်",
+                        pronunciation: "kɔ̀ɔp-khun",
+                        meaning: "thank you"
+                    },
+                    {
+                        thai: "ไม่เป็นไร",
+                        burmese: "ရပါတယ်",
+                        pronunciation: "mâi pen rai",
+                        meaning: "you're welcome/it's okay"
+                    },
+                    {
+                        thai: "ใช่",
+                        burmese: "ဟုတ်ကဲ့",
+                        pronunciation: "châi",
+                        meaning: "yes"
+                    },
+                    {
+                        thai: "ไม่",
+                        burmese: "မဟုတ်ဘူး",
+                        pronunciation: "mâi",
+                        meaning: "no"
+                    },
+                    {
+                        thai: "กินข้าวหรือยัง",
+                        burmese: "ထမင်းစားပြီးပြီလား",
+                        pronunciation: "gin kâao rʉ̌ʉ yang",
+                        meaning: "have you eaten yet?"
+                    },
+                    {
+                        thai: "อร่อย",
+                        burmese: "အရသာရှိတယ်",
+                        pronunciation: "à-ròi",
+                        meaning: "delicious"
+                    },
+                    {
+                        thai: "ราคาเท่าไหร่",
+                        burmese: "ဘယ်လောက်လဲ",
+                        pronunciation: "raa-khaa tâo-rài",
+                        meaning: "how much is it?"
                     }
                 ]
             };
@@ -376,6 +468,16 @@
             const categoryButtons = document.querySelectorAll('.category-selector');
             const cardCounter = document.querySelector('.card-counter');
             const playPronunciationButton = document.querySelector('.play-pronunciation');
+
+            // Initialize ResponsiveVoice if available
+            const voiceAvailable = typeof responsiveVoice !== 'undefined';
+
+            if (voiceAvailable) {
+                // Initialize with Thai language
+                responsiveVoice.init();
+            } else {
+                console.warn("ResponsiveVoice not available. Using browser's native speech synthesis instead.");
+            }
 
             // Initialize the first card
             updateCard();
@@ -439,16 +541,51 @@
             function playPronunciation() {
                 const currentCard = flashcards[currentCategory][currentCardIndex];
 
-                // In the future, this can use actual audio files
-                // For now, we'll use the browser's speech synthesis if available
-                if ('speechSynthesis' in window) {
-                    const utterance = new SpeechSynthesisUtterance(currentCard.thai);
-                    utterance.lang = 'th-TH'; // Thai language
-                    speechSynthesis.speak(utterance);
+                if (voiceAvailable) {
+                    // Use ResponsiveVoice with Thai language
+                    responsiveVoice.speak(currentCard.thai, "Thai Female", {
+                        rate: 0.8,  // Slightly slower rate for better learning
+                        pitch: 1,
+                        onstart: function() {
+                            playPronunciationButton.style.backgroundColor = "#888";
+                            playPronunciationButton.innerHTML = '<span class="sound-icon">🔊</span> Playing...';
+                        },
+                        onend: function() {
+                            playPronunciationButton.style.backgroundColor = "";
+                            playPronunciationButton.innerHTML = '<span class="sound-icon">🔊</span> Play Thai';
+                        }
+                    });
                 } else {
-                    alert("Text-to-speech is not supported in your browser. Consider adding audio files for proper Thai pronunciation.");
+                    // Fallback to browser's speech synthesis
+                    if ('speechSynthesis' in window) {
+                        const utterance = new SpeechSynthesisUtterance(currentCard.thai);
+                        utterance.lang = 'th-TH'; // Thai language
+                        speechSynthesis.speak(utterance);
+                    } else {
+                        alert("Speech synthesis is not supported in your browser.");
+                    }
                 }
             }
+
+            // Keyboard navigation
+            document.addEventListener('keydown', function(event) {
+                if (event.key === 'ArrowLeft') {
+                    if (currentCardIndex > 0) {
+                        currentCardIndex--;
+                        updateCard();
+                    }
+                } else if (event.key === 'ArrowRight') {
+                    if (currentCardIndex < flashcards[currentCategory].length - 1) {
+                        currentCardIndex++;
+                        updateCard();
+                    }
+                } else if (event.key === ' ' || event.key === 'Spacebar') {
+                    card.classList.toggle('flipped');
+                    event.preventDefault();
+                } else if (event.key === 'p') {
+                    playPronunciation();
+                }
+            });
         });
     </script>
 </body>
