@@ -825,8 +825,8 @@
 
             // Stop speaking
             function stopSpeaking() {
-                // Stop browser speech synthesis
-                if (isBrowserTTSAvailable()) {
+                // First check if browser speech synthesis is available before using it
+                if (isBrowserTTSAvailable() && speechSynthesis) {
                     speechSynthesis.cancel();
                 }
 
@@ -858,8 +858,10 @@
                 // Ensure card is not flipped when changing cards
                 card.classList.remove('flipped');
 
-                // Stop any current speech when changing cards
-                stopSpeaking();
+                // Only stop speech if we're already speaking something
+                if (isCurrentlySpeaking) {
+                    stopSpeaking();
+                }
             }
 
             // Keyboard navigation
