@@ -4,8 +4,6 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Thai-Burmese Flash Cards</title>
-    <!-- ResponsiveVoice API -->
-    <script src="https://code.responsivevoice.org/responsivevoice.js?key=D2EUdI9u"></script>
     <style>
         :root {
             --primary-color: #f9c22e;
@@ -14,6 +12,7 @@
             --card-color: #ffffff;
             --text-color: #333333;
             --accent-color: #ff6b6b;
+            --google-color: #4285F4;
         }
 
         body {
@@ -47,6 +46,18 @@
             align-items: center;
         }
 
+        .audio-status {
+            background-color: #fff;
+            border: 1px solid #ddd;
+            border-radius: 8px;
+            padding: 15px;
+            margin-bottom: 20px;
+            width: 90%;
+            max-width: 600px;
+            text-align: center;
+            box-shadow: 0 2px 5px rgba(0,0,0,0.1);
+        }
+
         .controls {
             display: flex;
             justify-content: center;
@@ -64,6 +75,7 @@
             border-radius: 5px;
             cursor: pointer;
             transition: background-color 0.3s;
+            font-size: 16px;
         }
 
         .category-selector.active {
@@ -150,6 +162,7 @@
             border-radius: 5px;
             cursor: pointer;
             transition: background-color 0.3s;
+            font-size: 16px;
         }
 
         .nav-button:hover {
@@ -161,47 +174,27 @@
             cursor: not-allowed;
         }
 
-        .audio-setup-button {
-            margin-bottom: 20px;
-            background-color: #53b3cb;
-            color: white;
-            border: none;
-            border-radius: 5px;
-            padding: 12px 20px;
-            cursor: pointer;
-            font-size: 16px;
-            transition: background-color 0.3s;
-            width: 300px;
-            max-width: 100%;
-        }
-
-        .audio-setup-button:hover {
-            background-color: #3e8a9a;
-        }
-
-        .audio-setup-button.enabled {
-            background-color: #4CAF50;
-        }
-
-        .play-pronunciation {
+        .action-button {
             margin-top: 10px;
             background-color: var(--accent-color);
             color: white;
             border: none;
             border-radius: 5px;
-            padding: 8px 15px;
+            padding: 12px 15px;
             cursor: pointer;
             display: flex;
             align-items: center;
             gap: 5px;
-            font-size: 16px;
+            font-size: 15px;
+            justify-content: center;
+            min-width: 140px;
         }
 
-        .play-pronunciation:hover {
+        .action-button:hover {
             background-color: #ff5151;
         }
 
-        .play-pronunciation:disabled {
+        .action-button:disabled {
             background-color: #ccc;
             cursor: not-allowed;
         }
@@ -216,6 +209,54 @@
             color: var(--text-color);
         }
 
+        .button-row {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 10px;
+            margin-top: 10px;
+            justify-content: center;
+        }
+
+        .google-button {
+            background-color: var(--google-color);
+        }
+
+        .google-button:hover {
+            background-color: #3367d6;
+        }
+
+        /* QR Code styles */
+        .qr-container {
+            margin-top: 20px;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            gap: 10px;
+        }
+
+        .qr-code {
+            width: 180px;
+            height: 180px;
+            background-color: white;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            padding: 10px;
+            border-radius: 8px;
+            box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+        }
+
+        .qr-code img {
+            width: 100%;
+            height: 100%;
+        }
+
+        .qr-caption {
+            font-size: 14px;
+            color: var(--text-color);
+            text-align: center;
+        }
+
         footer {
             margin-top: auto;
             padding: 20px;
@@ -228,6 +269,18 @@
             font-size: 12px;
             margin-top: 5px;
             color: #888;
+        }
+
+        .test-audio-button {
+            background-color: #4caf50;
+            margin: 5px 0 15px 0;
+            padding: 12px 20px;
+        }
+
+        #error-message {
+            color: #f44336;
+            margin-top: 5px;
+            font-size: 14px;
         }
 
         @media (max-width: 500px) {
@@ -248,8 +301,26 @@
                 font-size: 24px;
             }
 
-            .audio-setup-button {
-                width: 90%;
+            .action-button {
+                width: 120px;
+                padding: 12px 8px;
+                font-size: 14px;
+            }
+
+            .test-audio-button {
+                width: 80%;
+                max-width: 300px;
+                padding: 15px 10px;
+            }
+
+            .button-row {
+                width: 100%;
+                justify-content: center;
+            }
+
+            .qr-code {
+                width: 150px;
+                height: 150px;
             }
         }
     </style>
@@ -261,7 +332,14 @@
     </header>
 
     <div class="container">
-        <button id="audio-setup" class="audio-setup-button">🔊 Click here to enable audio</button>
+        <div class="audio-status">
+            <h3>Audio Status</h3>
+            <button id="test-audio" class="nav-button test-audio-button">
+                🔊 Test Basic Audio (Click First)
+            </button>
+            <div id="audio-status-message">Click the button above to test audio on your device</div>
+            <div id="error-message"></div>
+        </div>
 
         <div class="controls">
             <button class="category-selector active" data-category="colors">Colors</button>
@@ -274,9 +352,17 @@
                 <div class="card-face card-front">
                     <div class="thai-word"></div>
                     <div class="pronunciation"></div>
-                    <button class="play-pronunciation" disabled>
-                        <span class="sound-icon">🔊</span> Play Thai
-                    </button>
+                    <div class="button-row">
+                        <button class="action-button" id="play-pronunciation">
+                            <span class="sound-icon">🔊</span> Play Thai
+                        </button>
+                        <button class="action-button" id="copy-thai" style="background-color: #3e8a9a;">
+                            <span class="sound-icon">📋</span> Copy Thai
+                        </button>
+                        <button class="action-button google-button" id="google-translate">
+                            <span class="sound-icon">G</span> Google
+                        </button>
+                    </div>
                 </div>
                 <div class="card-face card-back">
                     <div class="burmese-translation"></div>
@@ -290,15 +376,40 @@
         </div>
 
         <div class="card-counter">Card 1 of 10</div>
+
+        <div class="qr-container">
+            <h3>Scan QR to hear pronunciation</h3>
+            <div class="qr-code">
+                <div id="qrcode"></div>
+            </div>
+            <div class="qr-caption">
+                Scan this QR code with your phone to open this word in Google Translate
+            </div>
+        </div>
     </div>
 
     <footer>
         <p>Created for Thai language practice | <a href="https://github.com/yourusername/thai-burmese-flashcards" target="_blank">GitHub Repository</a></p>
-        <p class="attribution">Voice powered by ResponsiveVoice (Free Non-Commercial License)</p>
     </footer>
+
+    <!-- QR Code Library -->
+    <script src="https://cdn.jsdelivr.net/npm/qrcode.js@1.0.0/qrcode.min.js"></script>
 
     <script>
         document.addEventListener('DOMContentLoaded', function() {
+            // Audio element for playback
+            const audioElement = new Audio();
+            let audioWorks = false;
+
+            // DOM elements
+            const testAudioButton = document.getElementById('test-audio');
+            const audioStatusMessage = document.getElementById('audio-status-message');
+            const errorMessageElement = document.getElementById('error-message');
+            const playPronunciationButton = document.getElementById('play-pronunciation');
+            const copyThaiButton = document.getElementById('copy-thai');
+            const googleTranslateButton = document.getElementById('google-translate');
+            const qrcodeElement = document.getElementById('qrcode');
+
             // Flash card data
             const flashcards = {
                 colors: [
@@ -492,9 +603,8 @@
             // Application state
             let currentCategory = 'colors';
             let currentCardIndex = 0;
-            let audioEnabled = false;
 
-            // DOM Elements
+            // Card and UI elements
             const card = document.querySelector('.card');
             const thaiWordElement = document.querySelector('.thai-word');
             const burmeseTranslationElement = document.querySelector('.burmese-translation');
@@ -503,106 +613,64 @@
             const nextButton = document.querySelector('.next-button');
             const categoryButtons = document.querySelectorAll('.category-selector');
             const cardCounter = document.querySelector('.card-counter');
-            const playPronunciationButton = document.querySelector('.play-pronunciation');
-            const audioSetupButton = document.getElementById('audio-setup');
 
-            // Audio setup for mobile browsers
-            audioSetupButton.addEventListener('click', function() {
-                setupAudio();
+            // Test audio button setup
+            testAudioButton.addEventListener('click', function() {
+                testAudioButton.textContent = '🔊 Testing audio...';
+                testAudioButton.disabled = true;
+
+                // Test with a simple beep sound
+                const testAudio = new Audio('https://www.soundjay.com/buttons/beep-07.mp3');
+
+                testAudio.oncanplaythrough = () => {
+                    audioStatusMessage.textContent = 'Audio loaded successfully. Trying to play...';
+                };
+
+                testAudio.play()
+                    .then(() => {
+                        // Audio played successfully
+                        audioWorks = true;
+                        testAudioButton.textContent = '✅ Audio works!';
+                        testAudioButton.style.backgroundColor = '#4CAF50';
+                        audioStatusMessage.textContent = 'Audio is working on your device! You can now use the "Play Thai" button on each card.';
+                        errorMessageElement.textContent = '';
+                    })
+                    .catch(err => {
+                        // Audio failed to play
+                        console.error("Audio test failed:", err);
+                        testAudioButton.textContent = '❌ Audio test failed';
+                        testAudioButton.style.backgroundColor = '#f44336';
+                        testAudioButton.disabled = false;
+                        audioStatusMessage.textContent = 'Your device is not allowing audio playback.';
+                        errorMessageElement.textContent = 'Error: ' + err.message;
+                        showAudioTroubleshooting();
+                    });
             });
 
-            function setupAudio() {
-                if (typeof responsiveVoice !== 'undefined') {
-                    try {
-                        // Play a silent sound to initialize
-                        responsiveVoice.speak('', 'UK English Female', {
-                            volume: 0.01,
-                            onstart: function() {
-                                console.log("Audio initialized");
-
-                                // Update button
-                                audioSetupButton.textContent = '🔊 Audio Enabled ✓';
-                                audioSetupButton.classList.add('enabled');
-
-                                // Enable play button
-                                playPronunciationButton.disabled = false;
-
-                                // Mark as enabled
-                                audioEnabled = true;
-
-                                // Store in localStorage for future visits
-                                try {
-                                    localStorage.setItem('audioInitialized', 'true');
-                                } catch (e) {
-                                    console.warn("Could not access localStorage:", e);
-                                }
-                            },
-                            onend: function() {
-                                // Animation to show it's complete
-                                setTimeout(() => {
-                                    audioSetupButton.style.display = 'none';
-                                }, 2000);
-                            },
-                            onerror: function(e) {
-                                console.error("Audio initialization error:", e);
-                                audioSetupButton.textContent = '❌ Could not enable audio. Try again.';
-                                setTimeout(() => {
-                                    audioSetupButton.textContent = '🔊 Click here to enable audio';
-                                }, 3000);
-                            }
-                        });
-                    } catch (e) {
-                        console.error("ResponsiveVoice error:", e);
-                        fallbackAudioSetup();
-                    }
-                } else {
-                    fallbackAudioSetup();
-                }
-            }
-
-            function fallbackAudioSetup() {
-                // Try browser's native speech synthesis
-                if ('speechSynthesis' in window) {
-                    try {
-                        // Create a silent utterance
-                        const utterance = new SpeechSynthesisUtterance('');
-                        speechSynthesis.speak(utterance);
-
-                        // Update UI
-                        audioSetupButton.textContent = '🔊 Audio Enabled (Browser Speech) ✓';
-                        audioSetupButton.classList.add('enabled');
-                        playPronunciationButton.disabled = false;
-                        audioEnabled = true;
-
-                        // Animation to show it's complete
-                        setTimeout(() => {
-                            audioSetupButton.style.display = 'none';
-                        }, 2000);
-                    } catch (e) {
-                        console.error("Speech synthesis error:", e);
-                        audioSetupButton.textContent = '❌ Audio unavailable in this browser';
-                        audioSetupButton.style.backgroundColor = "#f44336";
-                    }
-                } else {
-                    audioSetupButton.textContent = '❌ Speech not supported in this browser';
-                    audioSetupButton.style.backgroundColor = "#f44336";
-                }
-            }
-
-            // Check if audio was previously initialized
-            try {
-                if (localStorage.getItem('audioInitialized') === 'true') {
-                    setupAudio();
-                }
-            } catch (e) {
-                console.warn("Could not access localStorage:", e);
+            function showAudioTroubleshooting() {
+                const troubleshooting = document.createElement('div');
+                troubleshooting.innerHTML = `
+                    <h4 style="margin-top: 15px;">Troubleshooting Tips:</h4>
+                    <ul style="text-align: left; font-size: 14px;">
+                        <li>Make sure your device is not on silent/mute mode</li>
+                        <li>Check that media autoplay is allowed in your browser settings</li>
+                        <li>Try using a different browser (Chrome or Firefox)</li>
+                        <li>You can still use the "Copy Thai" button to copy words</li>
+                        <li>Use the Google Translate button or scan the QR code</li>
+                    </ul>
+                `;
+                document.querySelector('.audio-status').appendChild(troubleshooting);
             }
 
             // Initialize the first card
             updateCard();
 
             // Card flip event
-            card.addEventListener('click', function() {
+            card.addEventListener('click', function(e) {
+                // Don't flip if clicked on a button
+                if (e.target.tagName === 'BUTTON' || e.target.closest('button')) {
+                    return;
+                }
                 this.classList.toggle('flipped');
             });
 
@@ -635,11 +703,165 @@
                 });
             });
 
-            // Pronunciation button
+            // Play Thai pronunciation - using Google Translate TTS
             playPronunciationButton.addEventListener('click', function(event) {
                 event.stopPropagation(); // Prevent card from flipping
-                playPronunciation();
+
+                // Get current card data
+                const currentCard = flashcards[currentCategory][currentCardIndex];
+                const text = currentCard.thai;
+
+                // Update button state
+                this.innerHTML = '<span class="sound-icon">🔊</span> Loading...';
+                this.disabled = true;
+
+                // If audio isn't working, show a message
+                if (!audioWorks) {
+                    this.innerHTML = '<span class="sound-icon">❌</span> Audio not available';
+                    errorMessageElement.textContent = 'Please test audio first with the button at the top';
+                    setTimeout(() => {
+                        this.innerHTML = '<span class="sound-icon">🔊</span> Play Thai';
+                        this.disabled = false;
+                    }, 2000);
+                    return;
+                }
+
+                try {
+                    // Create Google Translate TTS URL
+                    const ttsUrl = `https://translate.google.com/translate_tts?ie=UTF-8&q=${encodeURIComponent(text)}&tl=th&client=tw-ob`;
+
+                    // Set audio source and play
+                    audioElement.src = ttsUrl;
+
+                    audioElement.oncanplaythrough = () => {
+                        this.innerHTML = '<span class="sound-icon">🔊</span> Playing...';
+                        audioElement.play()
+                            .catch(err => {
+                                console.error("Playback error:", err);
+                                this.innerHTML = '<span class="sound-icon">❌</span> Playback failed';
+                                errorMessageElement.textContent = 'Error: ' + err.message;
+                                setTimeout(() => {
+                                    this.innerHTML = '<span class="sound-icon">🔊</span> Play Thai';
+                                    this.disabled = false;
+                                }, 2000);
+                            });
+                    };
+
+                    audioElement.onended = () => {
+                        this.innerHTML = '<span class="sound-icon">🔊</span> Play Thai';
+                        this.disabled = false;
+                    };
+
+                    audioElement.onerror = (err) => {
+                        console.error("Audio loading error:", err);
+                        this.innerHTML = '<span class="sound-icon">❌</span> Loading failed';
+                        errorMessageElement.textContent = 'Could not load audio. Network issue or browser restriction.';
+                        setTimeout(() => {
+                            this.innerHTML = '<span class="sound-icon">🔊</span> Play Thai';
+                            this.disabled = false;
+                        }, 2000);
+                    };
+                } catch (err) {
+                    console.error("Play pronunciation error:", err);
+                    this.innerHTML = '<span class="sound-icon">❌</span> Error';
+                    errorMessageElement.textContent = 'Error: ' + err.message;
+                    setTimeout(() => {
+                        this.innerHTML = '<span class="sound-icon">🔊</span> Play Thai';
+                        this.disabled = false;
+                    }, 2000);
+                }
             });
+
+            // Copy Thai text button
+            copyThaiButton.addEventListener('click', function(event) {
+                event.stopPropagation(); // Prevent card from flipping
+
+                const currentCard = flashcards[currentCategory][currentCardIndex];
+                const textToCopy = currentCard.thai;
+
+                // Show copying state
+                this.innerHTML = '<span class="sound-icon">⏳</span> Copying...';
+
+                if (navigator.clipboard) {
+                    navigator.clipboard.writeText(textToCopy)
+                        .then(() => {
+                            this.innerHTML = '<span class="sound-icon">✓</span> Copied!';
+                            setTimeout(() => {
+                                this.innerHTML = '<span class="sound-icon">📋</span> Copy Thai';
+                            }, 2000);
+                        })
+                        .catch(err => {
+                            console.error("Copy failed:", err);
+                            this.innerHTML = '<span class="sound-icon">❌</span> Copy failed';
+                            setTimeout(() => {
+                                this.innerHTML = '<span class="sound-icon">📋</span> Copy Thai';
+                            }, 2000);
+                        });
+                } else {
+                    // Fallback for browsers without clipboard API
+                    const textarea = document.createElement('textarea');
+                    textarea.value = textToCopy;
+                    textarea.style.position = 'fixed';
+                    document.body.appendChild(textarea);
+                    textarea.focus();
+                    textarea.select();
+
+                    try {
+                        const successful = document.execCommand('copy');
+                        if (successful) {
+                            this.innerHTML = '<span class="sound-icon">✓</span> Copied!';
+                        } else {
+                            this.innerHTML = '<span class="sound-icon">❌</span> Copy failed';
+                        }
+                    } catch (err) {
+                        console.error("Copy failed:", err);
+                        this.innerHTML = '<span class="sound-icon">❌</span> Copy failed';
+                    }
+
+                    document.body.removeChild(textarea);
+                    setTimeout(() => {
+                        this.innerHTML = '<span class="sound-icon">📋</span> Copy Thai';
+                    }, 2000);
+                }
+            });
+
+            // Google Translate button - opens the word in Google Translate
+            googleTranslateButton.addEventListener('click', function(event) {
+                event.stopPropagation(); // Prevent card from flipping
+
+                const currentCard = flashcards[currentCategory][currentCardIndex];
+                const text = currentCard.thai;
+
+                // Create Google Translate URL
+                const translateUrl = `https://translate.google.com/?sl=th&tl=en&text=${encodeURIComponent(text)}&op=translate`;
+
+                // Open in new tab
+                window.open(translateUrl, '_blank');
+            });
+
+            // Generate QR code function
+            function generateQRCode(text) {
+                if (!window.QRCode) {
+                    console.error("QR Code library not loaded");
+                    return;
+                }
+
+                // Clear previous QR code
+                qrcodeElement.innerHTML = '';
+
+                // Create Google Translate URL for the QR code
+                const translateUrl = `https://translate.google.com/?sl=th&tl=en&text=${encodeURIComponent(text)}&op=translate`;
+
+                // Generate new QR code
+                new QRCode(qrcodeElement, {
+                    text: translateUrl,
+                    width: 128,
+                    height: 128,
+                    colorDark: "#000000",
+                    colorLight: "#ffffff",
+                    correctLevel: QRCode.CorrectLevel.H
+                });
+            }
 
             // Card update function
             function updateCard() {
@@ -658,98 +880,9 @@
 
                 // Ensure card is not flipped when changing cards
                 card.classList.remove('flipped');
-            }
 
-            // Pronunciation function
-            function playPronunciation() {
-                if (!audioEnabled) {
-                    alert("Please enable audio first by clicking the button at the top");
-                    return;
-                }
-
-                const currentCard = flashcards[currentCategory][currentCardIndex];
-
-                // Visual feedback first
-                playPronunciationButton.style.backgroundColor = "#888";
-                playPronunciationButton.innerHTML = '<span class="sound-icon">🔊</span> Playing...';
-
-                // Cancel any existing speech
-                if (typeof responsiveVoice !== 'undefined' && responsiveVoice.isPlaying()) {
-                    responsiveVoice.cancel();
-                }
-
-                // Try ResponsiveVoice first
-                if (typeof responsiveVoice !== 'undefined') {
-                    try {
-                        const textToSpeak = currentCard.thai;
-
-                        responsiveVoice.speak(textToSpeak, "Thai Female", {
-                            rate: 0.8,
-                            pitch: 1,
-                            volume: 1.0,
-                            onstart: function() {
-                                console.log("Speech started");
-                            },
-                            onend: function() {
-                                playPronunciationButton.style.backgroundColor = "";
-                                playPronunciationButton.innerHTML = '<span class="sound-icon">🔊</span> Play Thai';
-                                console.log("Speech ended");
-                            },
-                            onerror: function(e) {
-                                console.error("Speech error:", e);
-                                fallbackPronunciation(currentCard);
-                            }
-                        });
-                    } catch (e) {
-                        console.error("ResponsiveVoice error:", e);
-                        fallbackPronunciation(currentCard);
-                    }
-                } else {
-                    fallbackPronunciation(currentCard);
-                }
-            }
-
-            // Fallback pronunciation using browser's speech synthesis
-            function fallbackPronunciation(currentCard) {
-                if ('speechSynthesis' in window) {
-                    try {
-                        const utterance = new SpeechSynthesisUtterance(currentCard.thai);
-                        utterance.lang = 'th-TH';
-                        utterance.volume = 1.0;
-                        utterance.rate = 0.8;
-
-                        utterance.onstart = function() {
-                            console.log("Browser speech started");
-                        };
-
-                        utterance.onend = function() {
-                            playPronunciationButton.style.backgroundColor = "";
-                            playPronunciationButton.innerHTML = '<span class="sound-icon">🔊</span> Play Thai';
-                            console.log("Browser speech ended");
-                        };
-
-                        utterance.onerror = function(e) {
-                            console.error("Browser speech error:", e);
-                            playPronunciationButton.style.backgroundColor = "";
-                            playPronunciationButton.innerHTML = '<span class="sound-icon">❌</span> Audio Failed';
-
-                            setTimeout(() => {
-                                playPronunciationButton.innerHTML = '<span class="sound-icon">🔊</span> Play Thai';
-                            }, 2000);
-                        };
-
-                        speechSynthesis.speak(utterance);
-                    } catch (e) {
-                        console.error("Browser speech synthesis error:", e);
-                        playPronunciationButton.style.backgroundColor = "";
-                        playPronunciationButton.innerHTML = '<span class="sound-icon">🔊</span> Play Thai';
-                        alert("Speech synthesis failed. This may be due to browser restrictions.");
-                    }
-                } else {
-                    playPronunciationButton.style.backgroundColor = "";
-                    playPronunciationButton.innerHTML = '<span class="sound-icon">🔊</span> Play Thai';
-                    alert("Speech synthesis is not supported in your browser.");
-                }
+                // Generate QR code for the current word
+                generateQRCode(currentCard.thai);
             }
 
             // Keyboard navigation
@@ -767,8 +900,6 @@
                 } else if (event.key === ' ' || event.key === 'Spacebar') {
                     card.classList.toggle('flipped');
                     event.preventDefault();
-                } else if (event.key === 'p') {
-                    playPronunciation();
                 }
             });
         });
